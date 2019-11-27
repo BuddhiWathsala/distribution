@@ -26,7 +26,8 @@ define(['require', 'lodash', 'jquery'],
             this.container = options.templateHeader;
             this.payload = options.payload;
             this.exportType = options.exportType;
-            this.dockerDetailsForm = options.templateHeader.find('#docker-details')
+            this.dockerDetailsForm = options.templateHeader.find('#docker-details');
+            this.dockerImageName = options.dockerImageName;
         };
 
         DockerConfigDialog.prototype.constructor = DockerConfigDialog;
@@ -36,7 +37,12 @@ define(['require', 'lodash', 'jquery'],
             let dockerDownloadCheckboxInput = self.container.find("#download-docker-artifacts");
             let dockerDownloadCheckboxText = self.container.find("#download-docker-artifacts-label");
             let dockerPushCheckboxInput = self.container.find("#docker-push-checkbox");
+            let dockerImageInput = self.container.find("#docker-img-name-input-field-image");
+            if (self.dockerImageName != "") {
+                dockerImageInput.val(self.dockerImageName);
+            }
             if (self.exportType === "kubernetes") {
+                dockerPushCheckboxInput.prop('checked', true);
                 dockerDownloadCheckboxInput.hide();
                 dockerPushCheckboxInput.hide();
                 dockerDownloadCheckboxText.hide();
@@ -66,7 +72,8 @@ define(['require', 'lodash', 'jquery'],
             });
 
             self.container.find("#docker-details").on('input', function() {
-                var imageName = self.container.find("#docker-img-name-input-field").val();
+                var imageName = self.container.find("#docker-img-name-input-field-registry").val().trim()
+                                + "/" + self.container.find("#docker-img-name-input-field-image").val().trim();
                 var userName = self.container.find("#username").val();
                 var password = self.container.find("#password").val();
                 var email = self.container.find("#email").val();
@@ -88,7 +95,13 @@ define(['require', 'lodash', 'jquery'],
         DockerConfigDialog.prototype.getDockerConfigs = function () {
             var self = this;
             var templateKeyValue = {};
-            templateKeyValue["imageName"] = self.container.find("#docker-img-name-input-field").val();
+            if (self.container.find("#docker-img-name-input-field-registry").val().trim() != "") {
+                templateKeyValue["imageName"] = self.container.find("#docker-img-name-input-field-registry").val().trim()
+                                                            + "/" + self.container.find("#docker-img-name-input-field-image").val().trim();
+            } else {
+                templateKeyValue["imageName"] = self.container.find("#docker-img-name-input-field-image").val().trim();
+            }
+
             templateKeyValue["userName"] = self.container.find("#username").val();
             templateKeyValue["password"] = self.container.find("#password").val();
             templateKeyValue["email"] = self.container.find("#email").val();
@@ -108,7 +121,8 @@ define(['require', 'lodash', 'jquery'],
                 self.stepDesciption.css('background-color', '#d9534f !important');
             }
 
-            var imageName = self.container.find("#docker-img-name-input-field").val();
+            var registryName = self.container.find("#docker-img-name-input-field-registry").val().trim()
+            var imageName = self.container.find("#docker-img-name-input-field-image").val().trim();
             var userName = self.container.find("#username").val();
             var password = self.container.find("#password").val();
             var email = self.container.find("#email").val();
@@ -120,8 +134,8 @@ define(['require', 'lodash', 'jquery'],
                     return false;
                 }
 
-                if (imageName === "" || userName === "" || password === "" || email === "" ||
-                    imageName == null || userName == null || password == null || email == null
+                if (registryName === "" || imageName === "" || userName === "" || password === "" || email === "" ||
+                    registryName == null || imageName == null || userName == null || password == null || email == null
                 ) {
                     self.missingDockerConfigErrorMessage.show();
                     return false;
